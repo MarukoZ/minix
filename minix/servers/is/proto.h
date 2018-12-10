@@ -11,6 +11,7 @@ void vm_dmp(void);
 
 /* dmp_kernel.c */
 void proctab_dmp(void);
+void numproc_dmp(void);         /* ADDED FUNCTION PROTOTYPE */
 void procstack_dmp(void);
 void privileges_dmp(void);
 void image_dmp(void);
