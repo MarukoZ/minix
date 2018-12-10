@@ -13,6 +13,14 @@
 #include <minix/com.h>
 #include <machine/archtypes.h>
 
+enum sched_type_t{
+	SCHEDULE_TASK_DEFAULT,
+	SCHEDULE_TASK_LOTTERY,
+	SCHEDULE_TASK_EDF
+};
+
+static enum sched_type_t sched_type=SCHEDULE_TASK_DEFAULT;
+
 static unsigned balance_timeout;
 
 #define BALANCE_TIMEOUT	5 /* how often to balance queues in seconds */
@@ -245,6 +253,14 @@ int do_start_scheduling(message *m_ptr)
 
 	m_ptr->m_sched_lsys_scheduling_start.scheduler = SCHED_PROC_NR;
 
+	/* lottery scheduling */
+	rmp->lottery = 1;
+
+	/* EDF scheduling */
+	rmp->start_tick=time(0);
+	/* deadline not set */
+	rmp->deadline=-1;
+
 	return OK;
 }
 
@@ -321,7 +337,8 @@ static int schedule_process(struct schedproc * rmp, unsigned flags)
 	if ((err = sys_schedule(rmp->endpoint, new_prio,
 		new_quantum, new_cpu, niced)) != OK) {
 		printf("PM: An error occurred when trying to schedule %d: %d\n",
-		rmp->endpoint, err);
+		rmp->e
+		ndpoint, err);
 	}
 
 	return err;
