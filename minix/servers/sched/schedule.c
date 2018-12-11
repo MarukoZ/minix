@@ -330,13 +330,13 @@ int do_nice(message *m_ptr)
 			old_dealine = rmp->deadline;
 			
 			/* Update the proc entry and reschedule the process */
-			printf("SCHED: nice setting deadline %d\n",&new_deadline);
+			printf("SCHED: nice setting deadline %u\n",&new_deadline);
 			rmp->deadline=new_deadline;
 
 			if ((rv = schedule_process_local(rmp)) != OK) {
 				/* Something went wrong when rescheduling the process, roll
 				* back the changes to proc struct */
-				printf("SCHED: nice setting deadline failed, rolling back%d\n");
+				printf("SCHED: nice setting deadline failed, rolling back\n");
 				rmp->deadline     = old_dealine;
 			}
 
