@@ -335,7 +335,7 @@ void numproc_dmp(void)
   	if (mp->mp_pid == 0 && i != PM_PROC_NR) continue;
     ++n;
   }
-  printf("Number of Processes is: %d",n);
+  printf("Number of Processes is: %d\n",n);
 }
 #endif /* defined(__i386__) */
 
