@@ -330,7 +330,7 @@ int do_nice(message *m_ptr)
 			old_dealine = rmp->deadline;
 			
 			/* Update the proc entry and reschedule the process */
-			// printf("SCHED: nice setting deadline %u\n",&new_deadline);
+			printf("SCHED: nice setting deadline\n");
 			rmp->deadline=new_deadline;
 
 			if ((rv = schedule_process_local(rmp)) != OK) {
