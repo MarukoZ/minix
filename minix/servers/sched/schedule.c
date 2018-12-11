@@ -19,7 +19,7 @@ enum sched_type_t{
 	SCHEDULE_TASK_EDF
 };
 
-static enum sched_type_t sched_type=SCHEDULE_TASK_DEFAULT;
+static enum sched_type_t sched_type=SCHEDULE_TASK_EDF;
 
 static unsigned balance_timeout;
 
@@ -104,8 +104,25 @@ int do_noquantum(message *m_ptr)
 	}
 
 	rmp = &schedproc[proc_nr_n];
-	if (rmp->priority < MIN_USER_Q) {
-		rmp->priority += 1; /* lower priority */
+	
+
+	switch(sched_type){
+		case SCHEDULE_TASK_DEFAULT:
+			if (rmp->priority < MIN_USER_Q) {
+				rmp->priority += 1; /* lower priority */
+			}
+			break;
+		case SCHEDULE_TASK_EDF:
+			if (rmp->priority < MIN_USER_Q) {
+				rmp->priority += 1; /* lower priority */
+				// rmp->priority = MIN_USER_Q; /* set all process to lowest priority in default */
+			}
+			do_edf_scheduling();
+			break;
+		case SCHEDULE_TASK_LOTTERY:
+			break;
+		default:
+			break;
 	}
 
 	if ((rv = schedule_process_local(rmp)) != OK) {
@@ -259,7 +276,7 @@ int do_start_scheduling(message *m_ptr)
 	/* EDF scheduling */
 	rmp->start_tick=time(0);
 	/* deadline not set */
-	rmp->deadline=-1;
+	rmp->deadline=0;
 
 	return OK;
 }
@@ -273,6 +290,7 @@ int do_nice(message *m_ptr)
 	int rv;
 	int proc_nr_n;
 	unsigned new_q, old_q, old_max_q;
+	unsigned old_dealine,new_deadline;
 
 	/* check who can send you requests */
 	if (!accept_message(m_ptr))
@@ -285,23 +303,50 @@ int do_nice(message *m_ptr)
 	}
 
 	rmp = &schedproc[proc_nr_n];
-	new_q = m_ptr->m_pm_sched_scheduling_set_nice.maxprio;
-	if (new_q >= NR_SCHED_QUEUES) {
-		return EINVAL;
-	}
 
-	/* Store old values, in case we need to roll back the changes */
-	old_q     = rmp->priority;
-	old_max_q = rmp->max_priority;
+	switch(sched_type){
+		case SCHEDULE_TASK_DEFAULT:
+			new_q = m_ptr->m_pm_sched_scheduling_set_nice.maxprio;
+			if (new_q >= NR_SCHED_QUEUES) {
+				return EINVAL;
+			}
 
-	/* Update the proc entry and reschedule the process */
-	rmp->max_priority = rmp->priority = new_q;
+			/* Store old values, in case we need to roll back the changes */
+			old_q     = rmp->priority;
+			old_max_q = rmp->max_priority;
 
-	if ((rv = schedule_process_local(rmp)) != OK) {
-		/* Something went wrong when rescheduling the process, roll
-		 * back the changes to proc struct */
-		rmp->priority     = old_q;
-		rmp->max_priority = old_max_q;
+			/* Update the proc entry and reschedule the process */
+			rmp->max_priority = rmp->priority = new_q;
+
+			if ((rv = schedule_process_local(rmp)) != OK) {
+				/* Something went wrong when rescheduling the process, roll
+				* back the changes to proc struct */
+				rmp->priority     = old_q;
+				rmp->max_priority = old_max_q;
+			}
+			break;
+		case SCHEDULE_TASK_EDF:
+			new_deadline = m_ptr->m_pm_sched_scheduling_set_nice.maxprio;
+
+			/* Store old values, in case we need to roll back the changes */
+			old_dealine = rmo->deadline;
+			
+			/* Update the proc entry and reschedule the process */
+			printf("SCHED: nice setting deadline %d\n",new_deadline);
+			rmp->deadline=new_deadline;
+
+			if ((rv = schedule_process_local(rmp)) != OK) {
+				/* Something went wrong when rescheduling the process, roll
+				* back the changes to proc struct */
+				printf("SCHED: nice setting deadline failed, rolling back%d\n")
+				rmp->deadline     = old_dealine;
+			}
+
+			break;
+		case SCHEDULE_TASK_LOTTERY:
+			break;
+		default:
+			break;
 	}
 
 	return rv;
@@ -383,4 +428,35 @@ void balance_queues(void)
 
 	if ((r = sys_setalarm(balance_timeout, 0)) != OK)
 		panic("sys_setalarm failed: %d", r);
+}
+
+#define MAX_EDF_DDL 1000
+
+void do_edf_scheduling(void){
+	struct schedproc *rmp;
+	int r, proc_nr;
+	unsigned edfddl;
+	struct schedproc* edfrmp;
+
+	edfddl=MAX_EDF_DDL;
+	edfrmp=0;
+	
+	/* find the earliest deadline process */
+	for (proc_nr=0, rmp=schedproc; proc_nr < NR_PROCS; proc_nr++, rmp++) {
+		if (rmp->flags & IN_USE) {
+			if (rmp->deadline && rmp->deadline<edfddl) {
+				edfddl=rmp->deadline;
+				edfrmp=rmp;
+			}
+		}
+	}
+	
+	if(!edfrmp){
+		// printf("No earliest deadline process is found!\n");
+		return;
+	}
+	
+	edfrmp->priority = MAX_USER_Q; /* max priority */
+	schedule_process_local(edfrmp);
+	return;
 }

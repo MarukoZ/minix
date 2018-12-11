@@ -36,7 +36,6 @@ EXTERN struct schedproc {
 	/* lottery scheduling */
 	unsigned ticket;
 	/* earlist deadline first */
-	time_t start_tick;
 	unsigned deadline;
 
 } schedproc[NR_PROCS];
