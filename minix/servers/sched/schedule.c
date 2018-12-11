@@ -271,11 +271,9 @@ int do_start_scheduling(message *m_ptr)
 	m_ptr->m_sched_lsys_scheduling_start.scheduler = SCHED_PROC_NR;
 
 	/* lottery scheduling */
-	rmp->lottery = 1;
+	rmp->ticket = 1;
 
 	/* EDF scheduling */
-	rmp->start_tick=time(0);
-	/* deadline not set */
 	rmp->deadline=0;
 
 	return OK;
@@ -329,16 +327,16 @@ int do_nice(message *m_ptr)
 			new_deadline = m_ptr->m_pm_sched_scheduling_set_nice.maxprio;
 
 			/* Store old values, in case we need to roll back the changes */
-			old_dealine = rmo->deadline;
+			old_dealine = rmp->deadline;
 			
 			/* Update the proc entry and reschedule the process */
-			printf("SCHED: nice setting deadline %d\n",new_deadline);
+			printf("SCHED: nice setting deadline %d\n",&new_deadline);
 			rmp->deadline=new_deadline;
 
 			if ((rv = schedule_process_local(rmp)) != OK) {
 				/* Something went wrong when rescheduling the process, roll
 				* back the changes to proc struct */
-				printf("SCHED: nice setting deadline failed, rolling back%d\n")
+				printf("SCHED: nice setting deadline failed, rolling back%d\n");
 				rmp->deadline     = old_dealine;
 			}
 
@@ -382,8 +380,7 @@ static int schedule_process(struct schedproc * rmp, unsigned flags)
 	if ((err = sys_schedule(rmp->endpoint, new_prio,
 		new_quantum, new_cpu, niced)) != OK) {
 		printf("PM: An error occurred when trying to schedule %d: %d\n",
-		rmp->e
-		ndpoint, err);
+		rmp->endpoint, err);
 	}
 
 	return err;
