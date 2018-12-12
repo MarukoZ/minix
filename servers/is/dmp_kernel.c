@@ -12,6 +12,7 @@
 #include "../../kernel/type.h"
 #include "../../kernel/proc.h"
 #include "../../kernel/ipc.h"
+#include "../pm/mproc.h"
 
 #define LINES 22
 
@@ -370,6 +371,29 @@ PRIVATE char *p_rts_flags_str(int flags)
 
 	return str;
 }
+
+/*===========================================================================*
+ *				numproc_dmp    				     *
+ *===========================================================================*/
+#if (CHIP == INTEL)
+void numproc_dmp(void)
+{
+  /* Num proc dump */
+  struct mproc *mp;
+  int i, n = 0;
+  static int prev_i = 0;
+  clock_t uptime;
+  getsysinfo(PM_PROC_NR, SI_PROC_TAB, mproc);
+  for (i = prev_i; i < NR_PROCS; i++)
+  {
+    mp = &mproc[i];
+    if (mp->mp_pid == 0 && i != PM_PROC_NR)
+      continue;
+    ++n;
+  }
+  printf("\nNumber of Processes is: %d\n", n);
+}
+#endif /* (CHIP == INTEL) */
 
 /*===========================================================================*
  *				proctab_dmp    				     *
