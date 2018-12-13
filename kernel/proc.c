@@ -1393,11 +1393,26 @@ int *front;					/* return: front or back */
 }
 
 /*===========================================================================*
- *				luck_map					     * 
+ *				unlucky					     * 
  *===========================================================================*/
-PUBLIC int luck_map(int p){
-/* This function maps priority to percentage of success */
-	return p;
+PUBLIC int unlucky(int rand_num, int p, int p_max){
+	/* This function maps priority to percentage of success 
+	 * priority 0: 100%
+	 * priority 1: 93%
+	 */
+	switch(p){
+		case 0:
+			return 0;
+		case 1:
+			return 0;
+		case 2:
+			return 0;
+		case 3:
+			return 0;
+		default:
+			return ((rand_num%NR_SCHED_QUEUES-1)+(p_max/2))<p_max;
+	}
+	return 0;
 }
 
 /*===========================================================================*
@@ -1411,7 +1426,10 @@ PRIVATE struct proc * pick_proc(void)
  */
   register struct proc *rp;			/* process to run */
   int q;				/* iterate over queues */
+  
+  struct proc *first_ready_rp;
   int first_ready_q;
+  int ticket,rand_num;
 
   /* ve482 Xun Zhang 
    * This snippet of code intends to choose from 3 basic scheduling algorithms
@@ -1424,10 +1442,6 @@ PRIVATE struct proc * pick_proc(void)
   };
   enum sched_type_t sched_type = SCHED_TYPE_LOTTERY;
 
-
-  /* LOTTERY */
-  srand(time(0));
-  first_ready_q=NR_SCHED_QUEUES-1;
   switch(sched_type){
 	  /* Check each of the scheduling queues for ready processes. The number of
    		* queues is defined in proc.h, and priorities are set in the task table.
@@ -1450,34 +1464,51 @@ PRIVATE struct proc * pick_proc(void)
 		}
 		break;
 	  case SCHED_TYPE_LOTTERY:
-		  kprintf("doing lottery scheduling\n");
+		  /* LOTTERY */
+		  rand_num = rand();
+		  ticket = rand() % NR_SCHED_QUEUES;
+		  first_ready_q = NR_SCHED_QUEUES - 1;
+		  first_ready_rp = 0;
 		  /* Here we do lottery scheduling, first pick the random ticket */
 		  for (q = 0; q < NR_SCHED_QUEUES; q++)
 		  {
-			  if (!(rp = rdy_head[q]))
-			  {
-				  TRACE(VF_PICKPROC, printf("queue %d empty\n", q););
-				  continue;
-			  }
-			  if(NR_SCHED_QUEUES-1==first_ready_q)first_ready_q=q;
-			  /* We may further check if this priority is qualified to gain the ticket 
-				*  The higher priority, the larger the chance
+			if (!(rp = rdy_head[q]))
+			{
+				TRACE(VF_PICKPROC, printf("queue %d empty\n", q););
+				continue;
+			}
+			if((NR_SCHED_QUEUES-1)!=q){
+				/* if not the last process priority */
+				if (0 == first_ready_rp)
+				{
+					/* if first ready not saved, save the first ready process */
+					first_ready_q = q;
+					first_ready_rp = rp;
+				}
+				/* Since we search through the priority from high to low
+				*  the higher priority still have 50% chance to be selected
+				*  the optout rate is 100/2=50%
 				*/
-			  if (luck_map(q - first_ready_q)>=(rand()%NR_SCHED_QUEUES))
-			  {
-				  /* luck map: [0, relative-priority]
-				   * rand()%NR_SCHED_QUEUES): [0, num]
-				   */
-				  printf("Unlucky: %d\n",q);
-				  continue;
-			  }
+				if(q<ticket && unlucky(rand_num,q,q-first_ready_q)){
+					/* kprintf("Unlucky q: %d,%d,%d\n", ticket, q, q - first_ready_q);*/
+					continue;
+				}
 
-			  TRACE(VF_PICKPROC, printf("found %s / %d on queue %d\n",
-										rp->p_name, rp->p_endpoint, q););
-			  vmassert(!proc_is_runnable(rp));
-			  if (priv(rp)->s_flags & BILLABLE)
-				  bill_ptr = rp; /* bill for system time */
-				  return rp;
+			}else{
+				/* restore the first ready process if saved */
+				if (0 != first_ready_rp)
+				{
+					q = first_ready_q;
+					rp = first_ready_rp;
+				}
+			}
+
+			TRACE(VF_PICKPROC, printf("found %s / %d on queue %d\n",
+									rp->p_name, rp->p_endpoint, q););
+			vmassert(!proc_is_runnable(rp));
+			if (priv(rp)->s_flags & BILLABLE)
+				bill_ptr = rp; /* bill for system time */
+				return rp;
 		  }
 		  break;
 	  case SCHED_TYPE_EDF:

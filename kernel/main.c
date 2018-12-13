@@ -58,6 +58,9 @@ PUBLIC void main()
 	ppriv_addr[i] = sp;			/* priv ptr from number */
   }
 
+  /* ve482 Xun Zhang */
+  srand(1);
+
   /* Set up proc table entries for processes in boot image.  The stacks of the
    * kernel tasks are initialized to an array in data space.  The stacks
    * of the servers have been added to the data segment by the monitor, so
