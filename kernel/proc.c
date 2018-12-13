@@ -47,12 +47,6 @@
 #include "proc.h"
 #include "vm.h"
 
-enum sched_type_t
-{
-	SCHED_TYPE_DEFAULT,
-	SCHED_TYPE_LOTTERY,
-	SCHED_TYPE_EDF
-};
 int sched_type = SCHED_TYPE_LOTTERY;
 
 /* Scheduling and message passing functions. The functions are available to 
@@ -1428,6 +1422,8 @@ PRIVATE struct proc * pick_proc(void)
   struct proc *first_ready_rp;
   int first_ready_q;
   int ticket,rand_num;
+  
+  struct proc *tmp;
 
   /* ve482 Xun Zhang 
    * This snippet of code intends to choose from 3 basic scheduling algorithms
@@ -1503,22 +1499,8 @@ PRIVATE struct proc * pick_proc(void)
 		  }
 		  break;
 	  case SCHED_TYPE_EDF:
-	  	for (q = 0; q < NR_SCHED_QUEUES; q++)
-		{
-			if (!(rp = rdy_head[q]))
-			{
-				TRACE(VF_PICKPROC, printf("queue %d empty\n", q););
-				continue;
-			}
-			TRACE(VF_PICKPROC, printf("found %s / %d on queue %d\n",
-										rp->p_name, rp->p_endpoint, q););
-			vmassert(!proc_is_runnable(rp));
-			if (priv(rp)->s_flags & BILLABLE)
-				bill_ptr = rp; /* bill for system time */
-			return rp;
-		}
 		break;
-	  	break;
+
   }
   return NULL;
 }

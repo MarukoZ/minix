@@ -17,6 +17,12 @@
 #include "priv.h"
 
 extern int sched_type;
+enum sched_type_t
+{
+	SCHED_TYPE_DEFAULT,
+	SCHED_TYPE_LOTTERY,
+	SCHED_TYPE_EDF
+};
 
 struct proc {
   struct stackframe_s p_reg;	/* process' registers saved in stack frame */
@@ -41,6 +47,9 @@ struct proc {
 
   clock_t p_virt_left;		/* number of ticks left on virtual timer */
   clock_t p_prof_left;		/* number of ticks left on profile timer */
+    
+  /* ve482 */
+  timer_t p_deadline;
 
   struct proc *p_nextready;	/* pointer to next ready process */
   struct proc *p_caller_q;	/* head of list of procs wishing to send */

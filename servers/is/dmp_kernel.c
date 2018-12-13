@@ -403,7 +403,6 @@ PUBLIC void chrt_dmp()
 {
   /* Num proc dump */
   printf("\nchrt_dmp");
-  sys_chrt(0);
 }
 #endif /* (CHIP == INTEL) */
 

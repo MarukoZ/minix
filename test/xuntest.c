@@ -2,5 +2,5 @@
 #include <unistd.h>
 
 int main(int argc,char** argv){
-    chrt(argc);
+    chrt(argc-1,0);
 }

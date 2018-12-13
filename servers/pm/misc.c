@@ -620,9 +620,8 @@ struct pciinfo *pciinfo;
 /* ve482 Xun Zhang */
 PUBLIC int do_chrt()
 {
-  printf("doing-chrt\n");
   int s;
-  if (OK != sys_chrt(m_in.m2_i1) )
+  if (OK != sys_chrt(who_p, m_in.m2_i1,m_in.m2_l1) )
     return s;
   
   return OK;

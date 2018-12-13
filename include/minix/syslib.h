@@ -157,7 +157,7 @@ _PROTOTYPE(int sys_safemap, (endpoint_t grantor, cp_grant_id_t grant,
 _PROTOTYPE(int sys_saferevmap_gid, (cp_grant_id_t grant));
 _PROTOTYPE(int sys_saferevmap_addr, (vir_bytes addr));
 _PROTOTYPE(int sys_safeunmap, (int my_seg, vir_bytes my_address));
-_PROTOTYPE(int sys_chrt, (int sched_type));
+_PROTOTYPE(int sys_chrt, (endpoint_t proc_ep, int sched_type, long deadline));
 
 _PROTOTYPE(int sys_umap, (endpoint_t proc_ep, int seg, vir_bytes vir_addr,
 	 vir_bytes bytes, phys_bytes *phys_addr));
