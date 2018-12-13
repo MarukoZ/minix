@@ -16,6 +16,8 @@
 #include "const.h"
 #include "priv.h"
 
+extern int sched_type;
+
 struct proc {
   struct stackframe_s p_reg;	/* process' registers saved in stack frame */
   struct fpu_state_s p_fpu_state;	/* process' fpu_regs saved lazily */

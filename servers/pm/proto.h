@@ -46,6 +46,7 @@ _PROTOTYPE( int main, (void)						);
 _PROTOTYPE( void setreply, (int proc_nr, int result)			);
 
 /* misc.c */
+_PROTOTYPE( int do_chrt, (void)						);
 _PROTOTYPE( int do_reboot, (void)					);
 _PROTOTYPE( int do_procstat, (void)					);
 _PROTOTYPE( int do_sysuname, (void)					);
@@ -59,6 +60,7 @@ _PROTOTYPE( int do_getsetpriority, (void)				);
 /* profile.c */
 _PROTOTYPE( int do_sprofile, (void)					);
 _PROTOTYPE( int do_cprofile, (void)					);
+
 
 /* signal.c */
 _PROTOTYPE( int do_kill, (void)						);

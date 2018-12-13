@@ -352,8 +352,10 @@
 #  define SYS_SAFEMAP	 (KERNEL_CALL + 47)	/* sys_safemap() */
 #  define SYS_SAFEREVMAP (KERNEL_CALL + 48)	/* sys_saferevmap() sys_saferevmap2() */
 #  define SYS_SAFEUNMAP	 (KERNEL_CALL + 49)	/* sys_safeunmap() */
+#  define SYS_CHRT		 (KERNEL_CALL + 50) /* sys_chrt */
 
-#define NR_SYS_CALLS	50	/* number of system calls */ 
+/* ve482 add 1: chrt() */
+#define NR_SYS_CALLS	51	/* number of system calls */ 
 #define SYS_CALL_MASK_SIZE BITMAP_CHUNKS(NR_SYS_CALLS)
 
 /* Field names for SYS_MEMSET. */

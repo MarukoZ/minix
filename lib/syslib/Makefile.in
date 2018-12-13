@@ -53,6 +53,7 @@ libsys_FILES=" \
 	sys_runctl.c \
 	sys_safecopy.c \
 	sys_safemap.c \
+	sys_chrt.c \
 	sys_sysctl.c \
 	sys_vsafecopy.c \
 	sys_profbuf.c \

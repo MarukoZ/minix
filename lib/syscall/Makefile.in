@@ -17,6 +17,7 @@ libc_FILES=" \
 	chmod.s \
 	chown.s \
 	chroot.s \
+	chrt.s \
 	close.s \
 	closedir.s \
 	cprofile.s \

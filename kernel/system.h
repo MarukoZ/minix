@@ -73,6 +73,13 @@ _PROTOTYPE( int do_runctl, (message *m_ptr) );
 #define do_runctl do_unused
 #endif
 
+/* ve482 */
+_PROTOTYPE( int do_chrt, (message *m_ptr) );
+#if ! USE_CHRT
+#define do_chrt do_unused
+#endif
+
+
 _PROTOTYPE( int do_copy, (message *m_ptr) );	
 #define do_vircopy 	do_copy
 #if ! (USE_VIRCOPY || USE_PHYSCOPY)

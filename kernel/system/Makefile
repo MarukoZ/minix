@@ -52,6 +52,7 @@ OBJECTS	= \
 	$(SYSTEM)(do_sigsend.o) \
 	$(SYSTEM)(do_sigreturn.o) \
 	$(SYSTEM)(do_abort.o) \
+	$(SYSTEM)(do_chrt.o) \
 	$(SYSTEM)(do_getinfo.o) \
 	$(SYSTEM)(do_sprofile.o) \
 	$(SYSTEM)(do_cprofile.o) \
@@ -145,6 +146,9 @@ $(SYSTEM)(do_getinfo.o):	do_getinfo.c
 
 $(SYSTEM)(do_abort.o):	do_abort.c
 	$(CC) do_abort.c
+
+$(SYSTEM)(do_chrt.o):	do_chrt.c
+	$(CC) do_chrt.c
 
 $(SYSTEM)(do_setgrant.o):	do_setgrant.c
 	$(CC) do_setgrant.c

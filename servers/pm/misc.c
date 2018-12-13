@@ -616,3 +616,14 @@ struct pciinfo *pciinfo;
 	pciinfo->pi_count = entry - pciinfo->pi_entries;
 	return OK;
 }
+
+/* ve482 Xun Zhang */
+PUBLIC int do_chrt()
+{
+  printf("doing-chrt\n");
+  int s;
+  if (OK != sys_chrt(m_in.m2_i1) )
+    return s;
+  
+  return OK;
+}

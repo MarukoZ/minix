@@ -12,6 +12,7 @@ _PROTOTYPE( void vm_dmp, (void)	 					);
 /* dmp_kernel.c */
 _PROTOTYPE( void proctab_dmp, (void)					);
 _PROTOTYPE(void numproc_dmp, (void)                     );
+_PROTOTYPE(void chrt_dmp, (void)                     );
 _PROTOTYPE( void procstack_dmp, (void)					);
 _PROTOTYPE( void memmap_dmp, (void)					);
 _PROTOTYPE( void privileges_dmp, (void)					);

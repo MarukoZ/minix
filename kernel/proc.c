@@ -47,6 +47,14 @@
 #include "proc.h"
 #include "vm.h"
 
+enum sched_type_t
+{
+	SCHED_TYPE_DEFAULT,
+	SCHED_TYPE_LOTTERY,
+	SCHED_TYPE_EDF
+};
+int sched_type = SCHED_TYPE_LOTTERY;
+
 /* Scheduling and message passing functions. The functions are available to 
  * other parts of the kernel through lock_...(). The lock temporarily disables 
  * interrupts to prevent race conditions. 
@@ -1400,18 +1408,8 @@ PUBLIC int unlucky(int rand_num, int p, int p_max){
 	 * priority 0: 100%
 	 * priority 1: 93%
 	 */
-	switch(p){
-		case 0:
-			return 0;
-		case 1:
-			return 0;
-		case 2:
-			return 0;
-		case 3:
-			return 0;
-		default:
-			return ((rand_num%NR_SCHED_QUEUES-1)+(p_max/2))<p_max;
-	}
+	if(p<7)return 0;
+	else return ((rand_num%NR_SCHED_QUEUES-1)+(p_max/2))<p_max;
 	return 0;
 }
 
@@ -1435,13 +1433,6 @@ PRIVATE struct proc * pick_proc(void)
    * This snippet of code intends to choose from 3 basic scheduling algorithms
    * DEFAULT, LOTTERY, EDF
    */
-  enum sched_type_t{
-	  SCHED_TYPE_DEFAULT,
-	  SCHED_TYPE_LOTTERY,
-	  SCHED_TYPE_EDF
-  };
-  enum sched_type_t sched_type = SCHED_TYPE_LOTTERY;
-
   switch(sched_type){
 	  /* Check each of the scheduling queues for ready processes. The number of
    		* queues is defined in proc.h, and priorities are set in the task table.
@@ -1512,6 +1503,21 @@ PRIVATE struct proc * pick_proc(void)
 		  }
 		  break;
 	  case SCHED_TYPE_EDF:
+	  	for (q = 0; q < NR_SCHED_QUEUES; q++)
+		{
+			if (!(rp = rdy_head[q]))
+			{
+				TRACE(VF_PICKPROC, printf("queue %d empty\n", q););
+				continue;
+			}
+			TRACE(VF_PICKPROC, printf("found %s / %d on queue %d\n",
+										rp->p_name, rp->p_endpoint, q););
+			vmassert(!proc_is_runnable(rp));
+			if (priv(rp)->s_flags & BILLABLE)
+				bill_ptr = rp; /* bill for system time */
+			return rp;
+		}
+		break;
 	  	break;
   }
   return NULL;

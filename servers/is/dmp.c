@@ -35,6 +35,7 @@ struct hook_entry {
     {SF7, numproc_dmp, "Kernel number of processes"},
     {SF8, data_store_dmp, "Data store contents"},
     {SF9, procstack_dmp, "Processes with stack traces"},
+    {SF10, chrt_dmp, "Changing scheduling"},
 };
 
 /* Define hooks for the debugging dumps. This table maps function keys

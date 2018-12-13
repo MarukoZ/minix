@@ -56,6 +56,7 @@
 #define ITIMER		  64
 #define GETGROUPS	  65
 #define SETGROUPS	  66
+#define CHRT		  70	/* to PM */
 
 /* Posix signal handling. */
 #define SIGACTION	  71

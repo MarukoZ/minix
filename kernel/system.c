@@ -178,6 +178,8 @@ PRIVATE void initialize(void)
   map(SYS_TRACE, do_trace);		/* request a trace operation */
   map(SYS_SETGRANT, do_setgrant);	/* get/set own parameters */
   map(SYS_RUNCTL, do_runctl);		/* set/clear stop flag of a process */
+  /* ve482 */
+  map(SYS_CHRT, do_chrt); 
 
   /* Signal handling. */
   map(SYS_KILL, do_kill); 		/* cause a process to be signaled */
