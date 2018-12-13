@@ -36,7 +36,9 @@
 #include <minix/com.h>
 #include <minix/endpoint.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <signal.h>
+#include <time.h>
 #include <minix/portio.h>
 #include <minix/syslib.h>
 
@@ -1391,6 +1393,14 @@ int *front;					/* return: front or back */
 }
 
 /*===========================================================================*
+ *				luck_map					     * 
+ *===========================================================================*/
+PUBLIC int luck_map(int p){
+/* This function maps priority to percentage of success */
+	return p;
+}
+
+/*===========================================================================*
  *				pick_proc				     * 
  *===========================================================================*/
 PRIVATE struct proc * pick_proc(void)
@@ -1401,22 +1411,77 @@ PRIVATE struct proc * pick_proc(void)
  */
   register struct proc *rp;			/* process to run */
   int q;				/* iterate over queues */
+  int first_ready_q;
 
-  /* Check each of the scheduling queues for ready processes. The number of
-   * queues is defined in proc.h, and priorities are set in the task table.
-   * The lowest queue contains IDLE, which is always ready.
+  /* ve482 Xun Zhang 
+   * This snippet of code intends to choose from 3 basic scheduling algorithms
+   * DEFAULT, LOTTERY, EDF
    */
-  for (q=0; q < NR_SCHED_QUEUES; q++) {	
-	if(!(rp = rdy_head[q])) {
-		TRACE(VF_PICKPROC, printf("queue %d empty\n", q););
-		continue;
-	}
-	TRACE(VF_PICKPROC, printf("found %s / %d on queue %d\n", 
-		rp->p_name, rp->p_endpoint, q););
-	vmassert(!proc_is_runnable(rp));
-	if (priv(rp)->s_flags & BILLABLE)	 	
-		bill_ptr = rp;		/* bill for system time */
-	return rp;
+  enum sched_type_t{
+	  SCHED_TYPE_DEFAULT,
+	  SCHED_TYPE_LOTTERY,
+	  SCHED_TYPE_EDF
+  };
+  enum sched_type_t sched_type = SCHED_TYPE_LOTTERY;
+
+
+  /* LOTTERY */
+  srand(time(0));
+  first_ready_q=NR_SCHED_QUEUES-1;
+  switch(sched_type){
+	  /* Check each of the scheduling queues for ready processes. The number of
+   		* queues is defined in proc.h, and priorities are set in the task table.
+   		* The lowest queue contains IDLE, which is always ready.
+   		*/
+	  case SCHED_TYPE_DEFAULT:
+		for (q = 0; q < NR_SCHED_QUEUES; q++)
+		{
+			if (!(rp = rdy_head[q]))
+			{
+				TRACE(VF_PICKPROC, printf("queue %d empty\n", q););
+				continue;
+			}
+			TRACE(VF_PICKPROC, printf("found %s / %d on queue %d\n",
+										rp->p_name, rp->p_endpoint, q););
+			vmassert(!proc_is_runnable(rp));
+			if (priv(rp)->s_flags & BILLABLE)
+				bill_ptr = rp; /* bill for system time */
+			return rp;
+		}
+		break;
+	  case SCHED_TYPE_LOTTERY:
+		  kprintf("doing lottery scheduling\n");
+		  /* Here we do lottery scheduling, first pick the random ticket */
+		  for (q = 0; q < NR_SCHED_QUEUES; q++)
+		  {
+			  if (!(rp = rdy_head[q]))
+			  {
+				  TRACE(VF_PICKPROC, printf("queue %d empty\n", q););
+				  continue;
+			  }
+			  if(NR_SCHED_QUEUES-1==first_ready_q)first_ready_q=q;
+			  /* We may further check if this priority is qualified to gain the ticket 
+				*  The higher priority, the larger the chance
+				*/
+			  if (luck_map(q - first_ready_q)>=(rand()%NR_SCHED_QUEUES))
+			  {
+				  /* luck map: [0, relative-priority]
+				   * rand()%NR_SCHED_QUEUES): [0, num]
+				   */
+				  printf("Unlucky: %d\n",q);
+				  continue;
+			  }
+
+			  TRACE(VF_PICKPROC, printf("found %s / %d on queue %d\n",
+										rp->p_name, rp->p_endpoint, q););
+			  vmassert(!proc_is_runnable(rp));
+			  if (priv(rp)->s_flags & BILLABLE)
+				  bill_ptr = rp; /* bill for system time */
+				  return rp;
+		  }
+		  break;
+	  case SCHED_TYPE_EDF:
+	  	break;
   }
   return NULL;
 }

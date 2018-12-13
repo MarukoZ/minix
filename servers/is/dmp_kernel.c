@@ -391,7 +391,7 @@ void numproc_dmp(void)
       continue;
     ++n;
   }
-  printf("\nNumber of Processes is: %d\n", n);
+  printf("\nNumber of Processes is: %d", n);
 }
 #endif /* (CHIP == INTEL) */
 
