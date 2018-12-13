@@ -50,6 +50,10 @@ register struct proc *rc;		/* slot of process to clean up */
 {
   int i;
 
+  /* ve482 */
+  reset_timer(&rc->p_deadline); 
+  rc->p_deadline.tmr_exp_time = 0;
+
   /* Don't clear if already cleared. */
   if(isemptyp(rc)) return;
 

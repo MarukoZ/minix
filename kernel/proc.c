@@ -1379,6 +1379,11 @@ int *front;					/* return: front or back */
    * and lower the process' priority, unless the process already is in the 
    * lowest queue.  
    */
+  if(sched_type==SCHED_TYPE_EDF){
+	  if (rp->p_deadline.tmr_exp_time>0)
+  			rp->p_priority = 7;
+  }
+
   if (! time_left) {				/* quantum consumed ? */
       rp->p_ticks_left = rp->p_quantum_size; 	/* give new quantum */
       if (rp->p_priority < (NR_SCHED_QUEUES-1)) {
@@ -1499,7 +1504,34 @@ PRIVATE struct proc * pick_proc(void)
 		  }
 		  break;
 	  case SCHED_TYPE_EDF:
-		break;
+		  for (q = 0; q < NR_SCHED_QUEUES; q++)
+		  {
+			  
+			  if (!(rp = rdy_head[q]))
+			  {
+				  TRACE(VF_PICKPROC, printf("queue %d empty\n", q););
+				  continue;
+			  }
+			  if (q == 7)
+			  {
+				  rp = rdy_head[q]->p_nextready;
+				  tmp = rp;
+				  while (tmp != NULL)
+				  {
+					  if (tmp->p_deadline.tmr_exp_time > 0 && (rp->p_deadline.tmr_exp_time == 0 || rp->p_deadline.tmr_exp_time > 0 && tmp->p_deadline.tmr_exp_time < rp->p_deadline.tmr_exp_time))
+						  rp = tmp;
+					  tmp = tmp->p_nextready;
+				  }
+			  }
+			  TRACE(VF_PICKPROC, printf("found %s / %d on queue %d\n",
+										rp->p_name, rp->p_endpoint, q););
+			  vmassert(!proc_is_runnable(rp));
+			  if (priv(rp)->s_flags & BILLABLE)
+				  bill_ptr = rp; /* bill for system time */
+			  return rp;
+		  }
+		  
+		  break;
 
   }
   return NULL;
