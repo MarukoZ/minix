@@ -1,26 +1,35 @@
 #include <unistd.h>
 #include <stdio.h>
-#define Num_of_Threads 4
+#define Num_of_Threads 3
+#define Length_of_proc 3
+#define Proc_step 5
 static int count = 0;
 static char start_char = 'A';
 static int end_place[Num_of_Threads];
 void print_self(char a)
 {
-    int i,j;
-    for (i = 0; i < 10000; i++)
+    int iter = 0;
+    int i = 0;
+    for (iter = 0; iter < 10; iter++)
     {
         printf("This is process %c printing.\n", a);
-        for(j=0;j<100000;j++);
-        count++;
+        for (i = 0; i < 100000000; i++)
+        {
+            count++;
+        }
+    
     }
+    
+
     end_place[a - start_char] = count;
 }
 
-int main(){
+int main()
+{
     pid_t fpid;
     char test = start_char;
-
-    int i;
+    int i = 0;
+    int time_limit = Length_of_proc;
     for (i = 0; i < Num_of_Threads; i++)
     {
         fpid = fork();
@@ -28,12 +37,14 @@ int main(){
             printf("error in fork!");
         else if (fpid == 0)
         {
+            chrt(-1, time_limit);
             print_self(test);
             break;
         }
         else
         {
             test++;
+            time_limit = time_limit - Proc_step;
         }
     }
     return 0;

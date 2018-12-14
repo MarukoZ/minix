@@ -12,7 +12,7 @@
 
 #if USE_CHRT
 
-void reach_deadline(timer_t *tp)
+void timer_handler(timer_t *tp)
 {
   printf("Process %d reach deadline\n",tp->tmr_arg.ta_int);
   cause_sig(tp->tmr_arg.ta_int,SIGTERM);
@@ -36,21 +36,30 @@ PUBLIC int do_chrt(m_ptr) register message *m_ptr; /* pointer to request message
     sched_type = n;
   }
 
-  rp = proc_addr(m_ptr->m2_i2);
-  RTS_LOCK_SET(rp, RTS_SYS_LOCK);
-  if (rp->p_deadline.tmr_exp_time!=0){
-    reset_timer(&rp->p_deadline); 
-    rp->p_deadline.tmr_exp_time = 0;
+  if(sched_type==SCHED_TYPE_EDF){
+    rp = proc_addr(m_ptr->m2_i2);
+    RTS_LOCK_SET(rp, RTS_SYS_LOCK);
+    if (rp->p_deadline.tmr_exp_time != 0)
+    {
+      reset_timer(&rp->p_deadline);
+      rp->p_deadline.tmr_exp_time = 0;
+    }
+    if (m_ptr->m2_l1 != 0)
+    {
+      tp = &rp->p_deadline;
+      tp->tmr_arg.ta_int = rp->p_nr;
+      tp->tmr_exp_time = m_ptr->m2_l1 * 60 + get_uptime();
+      tp->tmr_func = timer_handler;
+      printf("Process %d set timer, deadline=%d \n", tp->tmr_arg.ta_int, tp->tmr_exp_time);
+      set_timer(tp, tp->tmr_exp_time, tp->tmr_func);
+    }
+    RTS_LOCK_UNSET(rp, RTS_SYS_LOCK);
+  }else if(sched_type==SCHED_TYPE_LOTTERY){
+    printf("You are in LOTTERY mode, deadline not set\n");
+  }else{
+    printf("You are in DEFAULT mode, deadline not set\n");
   }
-  if (m_ptr->m2_l1!=0){
-  	tp = &rp->p_deadline;
-  	tp->tmr_arg.ta_int = rp->p_nr;
-  	tp->tmr_exp_time = m_ptr->m2_l1*60+get_uptime();
-  	tp->tmr_func = reach_deadline; 	
-  	printf("Process %d set timer, deadline=%d \n",tp->tmr_arg.ta_int,tp->tmr_exp_time);
-  	set_timer(tp,tp->tmr_exp_time,tp->tmr_func);
-  }
-	RTS_LOCK_UNSET(rp, RTS_SYS_LOCK);
+
   return(OK);
 }
 

@@ -77,6 +77,9 @@ PUBLIC void main()
 	proc_nr_t proc_nr;
 	int ipc_to_m, kcalls;
 
+  /* ve482 */
+  rp->p_deadline.tmr_exp_time=0;
+
 	ip = &image[i];				/* process' attributes */
 	rp = proc_addr(ip->proc_nr);		/* get process pointer */
 	ip->endpoint = rp->p_endpoint;		/* ipc endpoint */

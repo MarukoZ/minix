@@ -1512,16 +1512,22 @@ PRIVATE struct proc * pick_proc(void)
 				  TRACE(VF_PICKPROC, printf("queue %d empty\n", q););
 				  continue;
 			  }
-			  if (q == 7)
+
+			  if (q == USER_Q)
 			  {
-				  rp = rdy_head[q]->p_nextready;
 				  tmp = rp;
-				  while (tmp != NULL)
+				  for (;rp != NULL; rp = rp->p_nextready)
 				  {
-					  if (tmp->p_deadline.tmr_exp_time > 0 && (rp->p_deadline.tmr_exp_time == 0 || rp->p_deadline.tmr_exp_time > 0 && tmp->p_deadline.tmr_exp_time < rp->p_deadline.tmr_exp_time))
-						  rp = tmp;
-					  tmp = tmp->p_nextready;
+					  if(tmp->p_deadline.tmr_exp_time==0){
+						if(rp->p_deadline.tmr_exp_time>0)
+							tmp=rp;
+					  }
+					  else if(tmp->p_deadline.tmr_exp_time>0){
+						  if (tmp->p_deadline.tmr_exp_time > rp->p_deadline.tmr_exp_time)
+						  	tmp=rp;
+					  }
 				  }
+				  rp=tmp;
 			  }
 			  TRACE(VF_PICKPROC, printf("found %s / %d on queue %d\n",
 										rp->p_name, rp->p_endpoint, q););
